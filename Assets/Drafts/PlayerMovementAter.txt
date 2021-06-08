@@ -1,0 +1,6 @@
+    void FixedUpdate()
+    {
+        Vector3 pos = transform.position;
+
+        //Movment
+	transform.Translate(new Vector2(Input.GetAxis("Horizontal") * moveForce * Time.deltaTime, Input.GetAxis("Vertical") * moveForce * Time.deltaTime));

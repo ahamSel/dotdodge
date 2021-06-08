@@ -1,0 +1,20 @@
+
+        if (Input.GetKey("w") || Input.GetKey(KeyCode.UpArrow))
+        {
+            rb2d.AddForce(Vector2.up * moveForce * Time.deltaTime, ForceMode2D.Impulse);
+        }
+
+        if (Input.GetKey("s") || Input.GetKey(KeyCode.DownArrow))
+        {
+            rb2d.AddForce(Vector2.down * moveForce * Time.deltaTime, ForceMode2D.Impulse);
+        }
+
+        if (Input.GetKey("d") || Input.GetKey(KeyCode.RightArrow))
+        {
+            rb2d.AddForce(Vector2.right * moveForce * Time.deltaTime, ForceMode2D.Impulse);
+        }
+
+        if (Input.GetKey("a") || Input.GetKey(KeyCode.LeftArrow))
+        {
+            rb2d.AddForce(Vector2.left * moveForce * Time.deltaTime, ForceMode2D.Impulse);
+        }
