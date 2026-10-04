@@ -138,7 +138,7 @@ Seven missiles, all capsules 16 long with radius 3.5:
   - A short tapering trail behind it.
 - **Missiles:** a capsule in its colour with an outline, rotated to its heading, with a short tapering colour trail (about 0.25 s) and three cartoon speed lines behind it (like the cover art).
 - **Warning:** a black chevron with a white outline, drawn on the wall and blinking. Launching flashes the wall at the entry point.
-- **Cannons:** a stubby black barrel with a thick muzzle ring on a round mount in the corner wall; it recoils and shows a white muzzle flash on each shot. **Arrows:** white triangles with outlines.
+- **Cannons:** not drawn (as in 2020); the arrows slide out of the corner walls. **Arrows:** white triangles with outlines.
 - **Title logo:** the "sun" from the original start art, redrawn: the dot in the centre with 7 coloured capsules radiating outward with speed lines, slowly breathing. "DotDodge" set in Tektur 900 at 75% width, white with a black outline.
 - **Font:** Tektur (variable, weight 900, width 75%), a subset woff2 bundled by Vite from `web/src/ui/fonts/`, with its licence shipped at the zip root as `OFL-Tektur.txt`.
 

@@ -8,12 +8,6 @@ export function lerpAngle(a: number, b: number, t: number): number {
   return a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * t;
 }
 
-export function easeOutBack(t: number): number {
-  const c1 = 1.70158;
-  const c3 = c1 + 1;
-  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
-}
-
 /** Frame-rate independent exponential approach toward `target`. */
 export function approach(current: number, target: number, rate: number, dt: number): number {
   return target + (current - target) * Math.exp(-rate * dt);

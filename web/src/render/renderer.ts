@@ -9,7 +9,7 @@ import { DEATH_FLASH, type Fx } from './fx';
 import { createMotion } from './motion';
 import { capsulePath, chevronPath, roundRectPath } from './shapes';
 import { createTrail, type Trail } from './trails';
-import { approach, clamp01, easeOutBack, hexToRgb, lerp, lerpAngle, mixRgb, rgbToCss, type RGB } from './tween';
+import { approach, clamp01, hexToRgb, lerp, lerpAngle, mixRgb, rgbToCss, type RGB } from './tween';
 import { fitView, worldMatrix, type View } from './view';
 
 const TAU = Math.PI * 2;
@@ -31,7 +31,7 @@ export interface Renderer {
   view(): View;
   /** `world` is null on the title screen (an empty arena). */
   draw(world: World | null, fx: Fx, alpha: number, joystick: JoystickView | null, dt: number): void;
-  /** Sim events that drive renderer-side animation (squash, cannon recoil). */
+  /** Sim events that drive renderer-side animation (squash). */
   onEvents(events: SimEvent[], world: World): void;
 }
 
@@ -45,7 +45,6 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   const motion = createMotion();
   const playerTrail = createTrail();
   let missileTrails: Trail[] = [];
-  const recoil = [0, 0];
   /** Where and when the dot was caught, for its flash before it shatters. */
   let caught: { x: number; y: number; at: number } | null = null;
 
@@ -56,7 +55,6 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     motion.reset();
     playerTrail.clear();
     missileTrails = world.missiles.map(() => createTrail());
-    recoil[0] = recoil[1] = 0;
     slow = 0;
     caught = null;
   }
@@ -205,70 +203,6 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     ctx.restore();
   }
 
-  /** Stage-6 cannons: a stubby black barrel on a round mount in the corner wall, with a muzzle flash per shot. */
-  function drawCannons(world: World, lw: number, dt: number) {
-    const t = world.elapsed - CONFIG.cannon.startAt;
-    if (t < 0) return;
-    const s = easeOutBack(clamp01(t / 0.35));
-    world.cannons.forEach((c, i) => {
-      recoil[i] = Math.max(0, recoil[i] - dt * 8);
-      const back = -recoil[i] * 4;
-      ctx.save();
-      // Mounted in the corner wall (the 2020 spot, x = ±319, falls off-screen in a tight frame); arrows still spawn behind it.
-      ctx.translate(-c.dir * (HW - 4), c.y);
-      ctx.scale(c.dir * s, s);
-      ctx.lineWidth = lw * 0.8;
-      ctx.strokeStyle = INK;
-      ctx.lineJoin = 'round';
-      // Mount.
-      ctx.beginPath();
-      ctx.arc(-5, 0, 9, 0, TAU);
-      ctx.fillStyle = '#3a3a3a';
-      ctx.fill();
-      ctx.stroke();
-      // Barrel, then the thicker muzzle ring.
-      ctx.beginPath();
-      roundRectPath(ctx, -6 + back, -5, 19, 10, 3);
-      ctx.fillStyle = '#1c1c1c';
-      ctx.fill();
-      ctx.stroke();
-      ctx.beginPath();
-      roundRectPath(ctx, 11 + back, -7, 6, 14, 2);
-      ctx.fill();
-      ctx.stroke();
-      // A glint along the barrel so it reads as round.
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-      ctx.lineWidth = 1.4;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-1 + back, -2.5);
-      ctx.lineTo(9 + back, -2.5);
-      ctx.stroke();
-      // Muzzle flash right after a shot.
-      if (recoil[i] > 0.5) {
-        const k = (recoil[i] - 0.5) / 0.5;
-        ctx.globalAlpha = k;
-        ctx.beginPath();
-        for (let p = 0; p < 10; p++) {
-          const a = (p / 10) * TAU;
-          const r = (p % 2 === 0 ? 8 : 3.5) * (0.8 + 0.4 * k);
-          const px = 21 + back + Math.cos(a) * r;
-          const py = Math.sin(a) * r;
-          if (p === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-        ctx.strokeStyle = INK;
-        ctx.lineWidth = lw * 0.5;
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-      ctx.restore();
-    });
-  }
-
   function drawJoystick(j: JoystickView) {
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(0,0,0,0.55)';
@@ -323,7 +257,6 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
       sync(world);
       for (const e of events) {
         if (e.type === 'bounce') motion.bounce(e.nx, e.ny, e.speed);
-        else if (e.type === 'fire') recoil[e.dir > 0 ? 0 : 1] = 1;
         else if (e.type === 'death') {
           playerTrail.clear();
           caught = { x: e.x, y: e.y, at: clock };
@@ -367,7 +300,6 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
       ctx.lineWidth = lw * 1.6 * (1 + pulse * 0.6);
       ctx.strokeStyle = INK;
       ctx.stroke();
-      if (world) drawCannons(world, lw, dt); // on top of the wall they are mounted in
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (joystick) drawJoystick(joystick);
