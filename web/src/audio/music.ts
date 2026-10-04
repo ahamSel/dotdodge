@@ -70,6 +70,7 @@ export function createMusic(engine: AudioEngine): Music {
       filter.type = 'lowpass';
       filter.frequency.value = 18000;
       filter.connect(duck).connect(bus);
+      applyDuck(); // honour a duck or hide requested before the nodes existed
     }
     return filter;
   }

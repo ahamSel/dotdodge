@@ -242,7 +242,7 @@ function frame(now: number) {
   }
   // Re-fit when the canvas size changed without a resize event (iOS rotation, itch fullscreen).
   const v = renderer.view();
-  if (canvas.clientWidth !== v.cssW || canvas.clientHeight !== v.cssH) ui.layout(renderer.resize());
+  if (Math.max(1, canvas.clientWidth) !== v.cssW || Math.max(1, canvas.clientHeight) !== v.cssH) ui.layout(renderer.resize());
   const animate = running || screen === 'title';
   if (animate) fx.update(frameDt);
   if (world) ui.hud(world, touchUsed);

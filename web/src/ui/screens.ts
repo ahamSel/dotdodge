@@ -2,7 +2,7 @@ import { describeRun } from '../best';
 import { CONFIG } from '../game/config';
 import { countdownShown } from '../game/schedule';
 import type { World } from '../game/types';
-import type { View } from '../render/view';
+import { frameWidth, type View } from '../render/view';
 import { createIrisSequencer } from './iris';
 
 export type ScreenName = 'title' | 'options' | 'playing' | 'paused' | 'gameover' | 'congrats';
@@ -137,9 +137,12 @@ export function createUI(root: HTMLElement): UI {
       s.setProperty('--ay', `${v.y}px`);
       s.setProperty('--aw', `${v.w}px`);
       s.setProperty('--ah', `${v.h}px`);
+      s.setProperty('--fw', `${frameWidth(v.cssW, v.cssH)}px`);
     },
 
     hud(world, touch) {
+      const live = world.phase === 'intro' || world.phase === 'running' ? '1' : '0';
+      if (root.dataset.live !== live) root.dataset.live = live; // no pause button once the run is over
       const n = countdownShown(world.elapsed);
       if (n !== shown.timer) {
         timer.textContent = String(n);

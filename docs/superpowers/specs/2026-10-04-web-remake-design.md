@@ -134,7 +134,7 @@ Seven missiles, all capsules 16 long with radius 3.5:
 - **Outline:** one width for everything, 2.4 world units, with a minimum of 2 CSS px.
 - **Player:** a white dot with an outline.
   - Squash and stretch: a spring on velocity, stretching along motion up to about 15%.
-  - On a bounce it flattens against the wall, anchored at the contact point, and wobbles back. It flashes white on death.
+  - On a bounce it flattens against the wall, anchored at the contact point, and wobbles back. On death it flips black and swells for the hit-stop, then shatters.
   - A short tapering trail behind it.
 - **Missiles:** a capsule in its colour with an outline, rotated to its heading, with a short tapering colour trail (about 0.25 s) and three cartoon speed lines behind it (like the cover art).
 - **Warning:** a black chevron with a white outline, drawn on the wall and blinking. Launching flashes the wall at the entry point.
