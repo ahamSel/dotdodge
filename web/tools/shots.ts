@@ -5,6 +5,7 @@ import { createWorld, drainEvents, step } from '../src/game/sim';
 import type { World } from '../src/game/types';
 import { createFx } from '../src/render/fx';
 import { createRenderer } from '../src/render/renderer';
+import { capsulePath, roundRectPath } from '../src/render/shapes';
 
 const DPR = 2;
 const log = (msg: string) => document.getElementById('log')!.insertAdjacentHTML('beforeend', `<p>${msg}</p>`);
@@ -65,31 +66,69 @@ async function save(canvas: HTMLCanvasElement, name: string) {
 }
 
 /**
- * The cover is a real frame from the game, zoomed in: the scene is rendered on a large canvas
- * (≈1.8 px per world unit) and its top-left corner is cropped, so the frame and walls still show
- * and the dot and missiles stay readable at itch's thumbnail size.
+ * The cover in the 2020 app icon's style: the dot in a square arena, the seven missiles closing in on it with
+ * speed lines behind them. itch also shrinks the cover's centre square to make the page's tab icon, so the
+ * arena is a centred square that survives that crop whole.
  */
 async function cover() {
   const W = 630;
   const H = 500;
-  const s = stage(1150, 660);
-  const p = s.world.player;
-  p.x = p.px = -120;
-  p.y = p.py = 10;
-  fly(s.world, 0, -300, 0, 0);
-  fly(s.world, 1, -170, 112, -1.0);
-  fly(s.world, 2, 10, 60, Math.PI + 0.3);
-  fly(s.world, 3, -20, -75, 2.4);
-  fly(s.world, 5, -300, 100, -0.35);
-  settle(s, 0.12);
+  const S = 440; // arena card size
   const out = document.createElement('canvas');
   out.width = W * DPR;
   out.height = H * DPR;
   out.style.width = `${W}px`;
   out.style.height = `${H}px`;
-  out.getContext('2d')!.drawImage(s.canvas, 0, 0, W * DPR, H * DPR, 0, 0, W * DPR, H * DPR);
   document.body.append(out);
-  outlinedText(out, 'DotDodge', W / 2 + 40, 78, 104);
+  const ctx = out.getContext('2d')!;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = CONFIG.colors.frame;
+  ctx.fillRect(0, 0, W, H);
+  ctx.beginPath();
+  roundRectPath(ctx, (W - S) / 2, (H - S) / 2, S, S, S * 0.1);
+  ctx.fillStyle = CONFIG.colors.field;
+  ctx.fill();
+  ctx.lineWidth = S * 0.022;
+  ctx.strokeStyle = CONFIG.colors.outline;
+  ctx.stroke();
+
+  ctx.translate(W / 2, H / 2);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // [missile, direction from the dot (degrees), distance] as laid out on the 2020 icon.
+  const ring: [number, number, number][] = [
+    [0, 180, 0.25], [6, -136, 0.24], [5, -76, 0.235], [1, -11, 0.25],
+    [3, 31, 0.24], [2, 81, 0.25], [4, 136, 0.235],
+  ];
+  const len = S * 0.15;
+  const rad = S * 0.024;
+  for (const [id, deg, dist] of ring) {
+    const a = (deg * Math.PI) / 180;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.translate(dist * S, 0);
+    ctx.beginPath();
+    capsulePath(ctx, len, rad);
+    ctx.fillStyle = CONFIG.missiles[id].color;
+    ctx.fill();
+    ctx.lineWidth = S * 0.014;
+    ctx.stroke();
+    // Speed lines trail out past the missile's tail, away from the dot.
+    ctx.lineWidth = S * 0.009;
+    for (const [off, start, l] of [[-0.035, 0.03, 0.07], [0, 0.05, 0.08], [0.035, 0.035, 0.06]]) {
+      ctx.beginPath();
+      ctx.moveTo(len / 2 + start * S, off * S);
+      ctx.lineTo(len / 2 + (start + l) * S, off * S);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.beginPath();
+  ctx.arc(0, 0, S * 0.085, 0, Math.PI * 2);
+  ctx.fillStyle = CONFIG.colors.player;
+  ctx.fill();
+  ctx.lineWidth = S * 0.018;
+  ctx.stroke();
   await save(out, 'cover.png');
 }
 
@@ -161,8 +200,9 @@ async function banner() {
 
 async function main() {
   await document.fonts.load('condensed 900 104px Tektur');
-  if (!location.search.includes('only=banner')) await cover();
-  await banner();
+  const only = new URLSearchParams(location.search).get('only');
+  if (only !== 'banner') await cover();
+  if (only !== 'cover') await banner();
   log('done');
 }
 void main();
