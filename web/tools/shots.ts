@@ -102,7 +102,7 @@ async function banner() {
   const H = 250;
   const s = stage(W, 560);
   const w = s.world;
-  w.elapsed = 104;
+  w.elapsed = 96; // just before the cannons appear, so no cannon pokes into the card's corner
   w.time = 2.75 + 104;
   w.stage = 6;
   w.cannonClock = 0.3;
@@ -111,21 +111,47 @@ async function banner() {
   const p = w.player;
   p.x = p.px = 215;
   p.y = p.py = 70;
-  fly(w, 0, -290, 60, 0.15);
+  fly(w, 0, -300, 22, 0.1);
   fly(w, 1, -170, 105, -0.25);
   fly(w, 2, 70, 125, -0.5);
   fly(w, 5, -250, 30, 0.1);
   fly(w, 6, 40, 20, 0.25);
   settle(s, 0.12);
+  // A closed "game window" card: the inside of the arena (from just under its top wall) in a rounded, outlined frame.
+  const v = s.renderer.view();
+  const m = 12; // red margin around the card
+  const r = 18;
+  const lw = 6;
+  const src = { x: v.x + 3, y: v.y + 1, w: v.w - 6, h: (H - 2 * m) * ((v.w - 6) / (W - 2 * m)) };
   const out = document.createElement('canvas');
   out.width = W * DPR;
   out.height = H * DPR;
   out.style.width = `${W}px`;
   out.style.height = `${H}px`;
-  const top = 28; // trim most of the red HUD band above the arena
-  out.getContext('2d')!.drawImage(s.canvas, 0, top * DPR, W * DPR, H * DPR, 0, 0, W * DPR, H * DPR);
   document.body.append(out);
-  outlinedText(out, 'DotDodge', W * 0.34, 118, 104);
+  const ctx = out.getContext('2d')!;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = CONFIG.colors.frame;
+  ctx.fillRect(0, 0, W, H);
+  const card = () => {
+    ctx.beginPath();
+    ctx.moveTo(m + r, m);
+    ctx.arcTo(W - m, m, W - m, H - m, r);
+    ctx.arcTo(W - m, H - m, m, H - m, r);
+    ctx.arcTo(m, H - m, m, m, r);
+    ctx.arcTo(m, m, W - m, m, r);
+    ctx.closePath();
+  };
+  ctx.save();
+  card();
+  ctx.clip();
+  ctx.drawImage(s.canvas, src.x * DPR, src.y * DPR, src.w * DPR, src.h * DPR, m, m, W - 2 * m, H - 2 * m);
+  ctx.restore();
+  card();
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = CONFIG.colors.outline;
+  ctx.stroke();
+  outlinedText(out, 'DotDodge', W * 0.34, 124, 104);
   await save(out, 'banner.png');
 }
 
