@@ -3,6 +3,7 @@ import { CONFIG } from '../game/config';
 import { countdownShown } from '../game/schedule';
 import type { World } from '../game/types';
 import type { View } from '../render/view';
+import { createIrisSequencer } from './iris';
 
 export type ScreenName = 'title' | 'options' | 'playing' | 'paused' | 'gameover' | 'congrats';
 export type UIAction = 'play' | 'options' | 'back' | 'pause' | 'resume' | 'restart' | 'menu' | 'slowmo' | 'toggleMute';
@@ -87,7 +88,32 @@ export function createUI(root: HTMLElement): UI {
   }
 
   const shown = { timer: -1, urgent: false, stage: 0, unlocked: false, btn: false, active: false, meter: -1 };
-  let irisBusy = false;
+  let irisFast = false;
+  const irisFrames: Keyframe[] = reduced
+    ? [{ opacity: 0, transform: 'translate(-50%,-50%) scale(1)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }]
+    : [{ transform: 'translate(-50%,-50%) scale(0)' }, { transform: 'translate(-50%,-50%) scale(1)' }];
+  const irisSequencer = createIrisSequencer((phase, done) => {
+    if (typeof iris.animate !== 'function') {
+      done(); // no Web Animations: swap screens instantly
+      return;
+    }
+    if (phase === 'close') {
+      iris.classList.add('is-on');
+      const close = iris.animate(irisFrames, { duration: irisFast ? 220 : 380, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+      close.onfinish = done;
+    } else {
+      const open = iris.animate([...irisFrames].reverse(), {
+        duration: irisFast ? 260 : 440,
+        delay: 60,
+        easing: 'cubic-bezier(.25,1,.5,1)',
+        fill: 'forwards',
+      });
+      open.onfinish = () => {
+        iris.classList.remove('is-on');
+        done();
+      };
+    }
+  });
 
   return {
     show(name) {
@@ -182,29 +208,8 @@ export function createUI(root: HTMLElement): UI {
     },
 
     iris(onCovered, fast = false) {
-      if (irisBusy || typeof iris.animate !== 'function') {
-        onCovered();
-        return;
-      }
-      irisBusy = true;
-      iris.classList.add('is-on');
-      const frames: Keyframe[] = reduced
-        ? [{ opacity: 0, transform: 'translate(-50%,-50%) scale(1)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }]
-        : [{ transform: 'translate(-50%,-50%) scale(0)' }, { transform: 'translate(-50%,-50%) scale(1)' }];
-      const close = iris.animate(frames, { duration: fast ? 220 : 380, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
-      close.onfinish = () => {
-        onCovered();
-        const open = iris.animate([...frames].reverse(), {
-          duration: fast ? 260 : 440,
-          delay: 60,
-          easing: 'cubic-bezier(.25,1,.5,1)',
-          fill: 'forwards',
-        });
-        open.onfinish = () => {
-          iris.classList.remove('is-on');
-          irisBusy = false;
-        };
-      };
+      irisFast = fast;
+      irisSequencer.request(onCovered);
     },
   };
 }
