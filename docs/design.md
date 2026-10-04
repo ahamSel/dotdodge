@@ -5,15 +5,15 @@ Status: Approved (written spec reviewed 2026-10-04)
 
 ## Goal
 
-Rebuild the 2020 Unity game DotDodge (repo `ahamSel/dtddge`, live at `ahamsel.itch.io/dotdodge` as an old Unity WebGL build) as a polished browser game that is clearly better but recognisably the same game, then update the itch page (new build, cover, screenshots, description).
+Rebuild the 2020 Unity game DotDodge (repo `ahamSel/dotdodge`, live at `ahamsel.itch.io/dotdodge` as an old Unity WebGL build) as a polished browser game that is clearly better but recognisably the same game, then update the itch page (new build, cover, screenshots, description).
 
 ## Constraints
 
-- Lives in `web/`. The Unity project (`Assets/`, `Packages/`, `ProjectSettings/`, `UserSettings/`) is untouched. `~/projects/dev/dotdodge-android` is reference only.
+- Lives in `web/`. The 2020 Unity project (now in `unity/`) is left as it was. The Android port (`ahamSel/dtddge-android`) is reference only.
 - TypeScript + Canvas 2D + Vite. No runtime dependencies. Dev dependencies: `vite`, `typescript`, `vitest`.
-- Architecture follows the Game Without Art remake (`~/projects/dev/gwa/web`): pure fixed-step sim emitting events; renderer, effects, DOM-overlay UI and synthesised audio consume them.
+- Architecture: pure fixed-step sim emitting events; renderer, effects, DOM-overlay UI and synthesised audio consume them.
 - Desktop keyboard and mobile touch. Must work inside the itch iframe.
-- No third-party assets from `Assets/` ship. The font "Big Space" (© Nurf Designs, All Rights Reserved), the theme ("Power Blast" by Xack) and the SFX (partly tagged "SFX Producer") are not cleared for redistribution. Replacements: the OFL font **Tektur** (Google Fonts, bundled locally with its OFL licence) and synthesised sound and music.
+- No third-party assets from the Unity project ship (and they are no longer in this repo). The font "Big Space" (© Nurf Designs, All Rights Reserved), the theme ("Power Blast" by Xack) and the SFX (partly tagged "SFX Producer") are not cleared for redistribution. Replacements: the OFL font **Tektur** (Google Fonts, bundled locally with its OFL licence) and synthesised sound and music.
 - All art is drawn with canvas shapes or CSS. The only shipped binary asset is the font.
 
 ## Success Criteria

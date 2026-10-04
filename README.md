@@ -1,12 +1,24 @@
+![DotDodge](web/marketing/banner.png)
+
 # DotDodge
 
-My first game (2020): dodge seven homing missiles for 120 seconds.
+Dodge seven homing missiles for 120 seconds. My first game, made in 2020, rebuilt for the browser in 2026.
 
 ### [Play it on itch.io](https://ahamsel.itch.io/dotdodge)
 
-## Web version (2026)
+![Gameplay: the last seconds of a run, all seven missiles chasing the dot, then the win](docs/preview.gif)
 
-A rebuild for the browser in `web/` (TypeScript, Canvas 2D, Vite; no runtime dependencies). Same game, same missiles and timings, redrawn with crisp shapes and with sound synthesised in the browser.
+## How to play
+
+You're the white dot. A blinking arrow on the wall shows where each missile will burst in, and every new one is faster and turns tighter than the last. Survive until the timer hits 0.
+
+- **Move:** WASD or arrow keys. On phones and tablets, drag anywhere to steer.
+- **Pause:** Esc or P. **Restart:** R. **Mute:** M.
+- Your dot has momentum and bounces off the walls. The last stage adds spikes along the top and bottom, and one hidden key that helps.
+
+## The browser version (`web/`)
+
+TypeScript, Canvas 2D and Vite, with no runtime dependencies. Everything is drawn with shapes, and the sound and music are synthesised in the browser.
 
 ```bash
 cd web
@@ -16,10 +28,23 @@ npm test        # unit tests
 npm run itch    # build web/dotdodge.zip for itch.io
 ```
 
-Controls: WASD / arrows to thrust (or drag on touch screens), Esc pause, R restart, M mute. One more key unlocks late in the run.
+In the dev server, open `/?watch=75` to start every run 75 seconds in with a dot nothing can catch, handy for checking the late stages.
 
-The font is [Tektur](https://fonts.google.com/specimen/Tektur) (SIL Open Font License, see `web/public/OFL-Tektur.txt`).
+| Folder | What's in it |
+| --- | --- |
+| `web/src/game` | The simulation: a fixed 60 Hz step that emits events (pure, unit tested) |
+| `web/src/render` | Canvas renderer, effects, trails |
+| `web/src/ui`, `web/src/audio`, `web/src/input` | Screens, synthesised sound and music, keyboard and touch |
+| `web/tests` | Vitest tests |
+| `web/tools` | Generates the store art (cover, banner) with the game's own renderer |
+| `web/marketing` | itch.io cover, banner, embed background and screenshots |
+| `docs/design.md` | The design the rebuild follows |
+| `unity/` | The original 2020 Unity project |
 
-## Original Unity version (2020)
+## The original (`unity/`)
 
-The Unity 2019.4 project is in this repo (`Assets/`, `ProjectSettings/`); the Android port lives in `ahamSel/dtddge-android`.
+The 2020 Unity 2019.4 project. Its font and audio were third-party files not licensed for redistribution, so they're left out of this repo; add your own to build it. The Android port lives in [ahamSel/dtddge-android](https://github.com/ahamSel/dtddge-android).
+
+## Credits
+
+Made by ahamsel. The font is [Tektur](https://fonts.google.com/specimen/Tektur) (SIL Open Font License, see `web/public/OFL-Tektur.txt`).
