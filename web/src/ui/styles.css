@@ -90,6 +90,15 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
 .hints { list-style: none; font-size: clamp(13px, 1.8vw, 17px); font-weight: 800; line-height: 1.5; text-shadow: var(--ol); }
 .hints small { font-size: 0.8em; }
 
+/* The title screen lives inside the arena, like the 2020 start panel. */
+.title-screen { inset: auto; left: var(--ax); top: var(--ay); width: var(--aw); height: var(--ah); gap: 14px; }
+@media (max-height: 640px) {
+  .title-screen .logo { width: 96px; }
+  .title-screen .title { font-size: 80px; }
+  .title-screen .btn { font-size: 22px; padding: 6px 22px 8px; }
+  .title-screen .menu { gap: 12px; }
+}
+
 /* buttons */
 .menu { display: flex; flex-direction: column; gap: 14px; width: min(260px, 100%); }
 .btn {
@@ -138,6 +147,7 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
   transform: translateX(-100%);
   gap: 10px;
   font-size: 15px;
+  white-space: nowrap;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -154,6 +164,11 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
 .slowmo .meter > span { display: block; height: 100%; background: var(--white); transform-origin: left center; }
 .slowmo.is-active .meter > span { background: #8fd3ff; }
 @media (max-width: 640px) { .slowmo .label { display: none; } }
+/* Too narrow to sit beside the timer: hang the meter just under it, inside the arena's top edge. */
+@media (max-width: 480px) {
+  .hud .slowmo { left: 50%; top: var(--ay); height: auto; transform: translate(-50%, 8px); }
+  .slowmo .meter { width: 72px; height: 13px; }
+}
 .slowmo-btn {
   position: absolute;
   left: calc(var(--ax) + var(--aw) - 92px);
@@ -174,7 +189,7 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
 .banner {
   position: absolute;
   left: calc(var(--ax) + var(--aw) / 2);
-  top: calc(var(--ay) + var(--ah) / 2);
+  top: calc(var(--ay) + var(--ah) * 0.3); /* above centre, so it rarely hides the dot */
   font-size: clamp(36px, 8vw, 80px);
   white-space: nowrap;
   text-shadow: var(--ol-drop);

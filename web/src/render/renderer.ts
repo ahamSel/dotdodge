@@ -292,13 +292,13 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
         drawPlayer(world, alpha, dt, lw);
         fx.draw(ctx);
         ctx.restore();
-        drawCannons(world, lw, dt);
       }
 
       fieldPath();
       ctx.lineWidth = lw * 1.6 * (1 + pulse * 0.6);
       ctx.strokeStyle = INK;
       ctx.stroke();
+      if (world) drawCannons(world, lw, dt); // on top of the wall they are mounted in
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (joystick) drawJoystick(joystick);
