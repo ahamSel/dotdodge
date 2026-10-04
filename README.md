@@ -6,7 +6,7 @@ Dodge seven homing missiles for 120 seconds. My first game, made in 2020, rebuil
 
 ### [Play it on itch.io](https://ahamsel.itch.io/dotdodge)
 
-![Gameplay: the last seconds of a run, all seven missiles chasing the dot, then the win](docs/preview.gif)
+![Gameplay: highlights from one real run, from the title through the stages, slow-mo and the last seconds to the win](docs/preview.gif)
 
 ## How to play
 
@@ -30,13 +30,15 @@ npm run itch    # build web/dotdodge.zip for itch.io
 
 In the dev server, open `/?watch=75` to start every run 75 seconds in with a dot nothing can catch, handy for checking the late stages.
 
+The preview above is one real run: `web/tools/capture/plan.html` (on the tools server, `npx vite --config tools/vite.config.ts`) searches the actual simulation for inputs that survive all 120 seconds and saves them to `tools/capture/run.json`, and `/?replay=run` makes the game play those inputs step for step.
+
 | Folder | What's in it |
 | --- | --- |
 | `web/src/game` | The simulation: a fixed 60 Hz step that emits events (pure, unit tested) |
 | `web/src/render` | Canvas renderer, effects, trails |
 | `web/src/ui`, `web/src/audio`, `web/src/input` | Screens, synthesised sound and music, keyboard and touch |
 | `web/tests` | Vitest tests |
-| `web/tools` | Generates the store art (cover, banner) with the game's own renderer |
+| `web/tools` | Generates the store art (cover, banner) with the game's own renderer, and plans the preview run (`tools/capture`) |
 | `web/marketing` | itch.io cover, banner, embed background and screenshots |
 | `docs/design.md` | The design the rebuild follows |
 | `unity/` | The original 2020 Unity project |

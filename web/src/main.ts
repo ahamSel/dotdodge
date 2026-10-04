@@ -13,6 +13,7 @@ import { createJoystick } from './input/touch';
 import { planSteps } from './loop';
 import { createFx, DEATH_FLASH } from './render/fx';
 import { createRenderer } from './render/renderer';
+import { replayInput, type Replay } from './dev/replay';
 import { screenDirToWorld } from './render/view';
 import { readBool, readNumber, writeBool, writeNumber } from './storage';
 import { createUI, type ScreenName, type UIAction } from './ui/screens';
@@ -52,6 +53,15 @@ let muted = readBool('muted', false);
 
 // Dev-only watch mode: open with ?watch=75 and every run starts 75 s in with a dot nothing can catch.
 const watchFrom = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('watch') ?? NaN) : NaN;
+// Dev-only replay: ?replay=run plays the planned inputs in tools/capture/run.json (for the README preview).
+let replay: Replay | null = null;
+let replayStep = 0;
+const replayName = import.meta.env.DEV ? new URLSearchParams(location.search).get('replay') : null;
+if (replayName) {
+  void fetch(`/tools/capture/${replayName}.json`)
+    .then((r) => r.json())
+    .then((r: Replay) => (replay = r));
+}
 
 if (import.meta.env.DEV) {
   (window as unknown as { dd: unknown }).dd = {
@@ -77,6 +87,7 @@ function recordRun() {
 function newRun() {
   recordRun();
   world = createWorld();
+  replayStep = 0;
   if (watchFrom >= 0) {
     world.ghost = true;
     world.time += watchFrom;
@@ -232,7 +243,10 @@ function frame(now: number) {
     } else {
       const input = currentInput();
       const plan = planSteps(acc, frameDt, CONFIG.step, CONFIG.maxFrame);
-      for (let i = 0; i < plan.steps; i++) step(world, i === 0 ? input : { move: input.move, slowmo: false }, CONFIG.step);
+      for (let i = 0; i < plan.steps; i++) {
+        const stepInput = replay ? replayInput(replay, replayStep++) : i === 0 ? input : { move: input.move, slowmo: false };
+        step(world, stepInput, CONFIG.step);
+      }
       if (plan.steps > 0) slowmoPressed = false;
       acc = plan.acc;
       alpha = plan.alpha;
