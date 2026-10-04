@@ -44,6 +44,12 @@ export function step(world: World, input: StepInput, dt: number): void {
   const live = world.phase === 'intro' || world.phase === 'running';
   if (live) {
     advanceClock(world);
+    // The win is decided the moment the countdown reaches 0, before anything else moves this step.
+    if (world.phase === 'running' && world.elapsed >= CONFIG.countdown) {
+      win(world);
+      freeze(world);
+      return;
+    }
     runSchedule(world);
   }
   const p = world.player;
@@ -53,7 +59,6 @@ export function step(world: World, input: StepInput, dt: number): void {
   if (live && world.elapsed >= CONFIG.cannon.startAt) fireCannons(world, wdt);
   moveArrows(world.arrows, wdt);
   if (live) collide(world);
-  if (world.phase === 'running' && world.elapsed >= CONFIG.countdown) win(world);
 }
 
 function advanceClock(world: World): void {

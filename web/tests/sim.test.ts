@@ -59,6 +59,16 @@ describe('stages and countdown', () => {
     expect(m.x).toBe(100);
   });
 
+  it('a missile arriving on the step the countdown hits 0 does not steal the win', () => {
+    const w = runningWorld(CONFIG.countdown - CONFIG.step / 2);
+    // Close enough that this step's flight reaches the dot (player radius + half capsule = 17.6).
+    launch(w, 1, 17.6 + 400 / 60 - 0.5, 0, Math.PI);
+    const events = run(w, CONFIG.step);
+    expect(of(events, 'death')).toHaveLength(0);
+    expect(of(events, 'win')).toHaveLength(1);
+    expect(w.phase).toBe('won');
+  });
+
   it('after the win nothing can kill you', () => {
     const w = runningWorld(119.99);
     run(w, 0.05);
