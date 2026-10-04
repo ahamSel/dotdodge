@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CONFIG } from '../src/game/config';
 import { createWorld, drainEvents, step } from '../src/game/sim';
 import type { SimEvent } from '../src/game/types';
+import { INTRO } from '../src/game/schedule';
 import { IDLE, launch, run, runningWorld } from './helpers';
 
 const of = <T extends SimEvent['type']>(events: SimEvent[], type: T) =>
@@ -178,5 +179,18 @@ describe('cannons in the world', () => {
     expect(of(run(before, 1), 'fire')).toHaveLength(0);
     const after = runningWorld(97);
     expect(of(run(after, 0.5), 'fire').length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('watch mode (dev only)', () => {
+  it('a ghost dot is never caught, so the run plays through to the win', () => {
+    // The real schedule from 90 s on: every missile homing in and, from 97 s, the cannons firing.
+    const w = createWorld();
+    w.time = INTRO + 90;
+    w.ghost = true;
+    const events = run(w, 31);
+    expect(of(events, 'death')).toHaveLength(0);
+    expect(of(events, 'win')).toHaveLength(1);
+    expect(w.phase).toBe('won');
   });
 });

@@ -50,6 +50,9 @@ let musicVol = readNumber('music', 60) / 100;
 let sfxVol = readNumber('sfx', 80) / 100;
 let muted = readBool('muted', false);
 
+// Dev-only watch mode: open with ?watch=75 and every run starts 75 s in with a dot nothing can catch.
+const watchFrom = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('watch') ?? NaN) : NaN;
+
 if (import.meta.env.DEV) {
   (window as unknown as { dd: unknown }).dd = {
     world: () => world,
@@ -68,12 +71,16 @@ function setScreen(next: ScreenName) {
 
 /** Saves the current run's progress if it is a new best (death, win, quit, page hide). */
 function recordRun() {
-  if (world) best.record(world.elapsed);
+  if (world && !world.ghost) best.record(world.elapsed);
 }
 
 function newRun() {
   recordRun();
   world = createWorld();
+  if (watchFrom >= 0) {
+    world.ghost = true;
+    world.time += watchFrom;
+  }
   best.startRun();
   acc = 0;
   hitStop = 0;

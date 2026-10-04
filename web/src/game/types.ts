@@ -105,6 +105,8 @@ export interface World {
   cannonClock: number;
   slowmo: SlowMo;
   events: SimEvent[];
+  /** Dev-only watch mode: nothing can catch the dot. */
+  ghost?: boolean;
 }
 
 export interface StepInput {

@@ -100,6 +100,7 @@ function runSchedule(world: World): void {
 }
 
 function collide(world: World): void {
+  if (world.ghost) return;
   const p = world.player;
   const { nearMiss, nearMissRearm } = CONFIG.missile;
   for (const m of world.missiles) {
