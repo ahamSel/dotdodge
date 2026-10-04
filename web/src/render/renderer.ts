@@ -5,11 +5,11 @@ import { lastBlinkStart, warningLit } from '../game/schedule';
 import { timeScale } from '../game/slowmo';
 import type { Missile, SimEvent, World } from '../game/types';
 import type { JoystickView } from '../input/touch';
-import type { Fx } from './fx';
+import { DEATH_FLASH, type Fx } from './fx';
 import { createMotion } from './motion';
 import { capsulePath, chevronPath, roundRectPath } from './shapes';
 import { createTrail, type Trail } from './trails';
-import { approach, clamp01, easeOutBack, hexToRgb, lerp, lerpAngle, mixRgb, rgbToCss } from './tween';
+import { approach, clamp01, easeOutBack, hexToRgb, lerp, lerpAngle, mixRgb, rgbToCss, type RGB } from './tween';
 import { fitView, worldMatrix, type View } from './view';
 
 const TAU = Math.PI * 2;
@@ -17,6 +17,7 @@ const INK = CONFIG.colors.outline;
 const FIELD = hexToRgb(CONFIG.colors.field);
 const SLOW_FIELD = hexToRgb('#c8a46e'); // desaturated, slightly darker orange
 const WHITE = hexToRgb('#ffffff');
+const VIGNETTE: RGB = [20, 0, 40];
 /** Three cartoon speed lines behind each missile: [offset across, length]. */
 const SPEED_LINES: readonly [number, number][] = [
   [-3.4, 9],
@@ -45,6 +46,8 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   const playerTrail = createTrail();
   let missileTrails: Trail[] = [];
   const recoil = [0, 0];
+  /** Where and when the dot was caught, for its flash before it shatters. */
+  let caught: { x: number; y: number; at: number } | null = null;
 
   /** A new run starts from a clean slate. */
   function sync(world: World) {
@@ -55,6 +58,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     missileTrails = world.missiles.map(() => createTrail());
     recoil[0] = recoil[1] = 0;
     slow = 0;
+    caught = null;
   }
 
   function resize(): View {
@@ -165,8 +169,21 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
 
   function drawPlayer(world: World, alpha: number, dt: number, lw: number) {
     const p = world.player;
-    if (!p.alive) return;
     const r = CONFIG.player.radius;
+    if (!p.alive) {
+      // Caught: the dot flips to black and swells for the hit-stop, then the shards take over.
+      if (caught && clock - caught.at < DEATH_FLASH) {
+        const k = (clock - caught.at) / DEATH_FLASH;
+        ctx.beginPath();
+        ctx.arc(caught.x, caught.y, r * (1.1 + 0.25 * k), 0, TAU);
+        ctx.fillStyle = INK;
+        ctx.fill();
+        ctx.lineWidth = lw;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+      }
+      return;
+    }
     const x = lerp(p.px, p.x, alpha);
     const y = lerp(p.py, p.y, alpha);
     const ts = timeScale(world.slowmo);
@@ -188,6 +205,7 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     ctx.restore();
   }
 
+  /** Stage-6 cannons: a stubby black barrel on a round mount in the corner wall, with a muzzle flash per shot. */
   function drawCannons(world: World, lw: number, dt: number) {
     const t = world.elapsed - CONFIG.cannon.startAt;
     if (t < 0) return;
@@ -201,16 +219,52 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
       ctx.scale(c.dir * s, s);
       ctx.lineWidth = lw * 0.8;
       ctx.strokeStyle = INK;
+      ctx.lineJoin = 'round';
+      // Mount.
       ctx.beginPath();
-      roundRectPath(ctx, -14 + back, -7, 20, 14, 4);
-      ctx.fillStyle = '#ffffff';
+      ctx.arc(-5, 0, 9, 0, TAU);
+      ctx.fillStyle = '#3a3a3a';
+      ctx.fill();
+      ctx.stroke();
+      // Barrel, then the thicker muzzle ring.
+      ctx.beginPath();
+      roundRectPath(ctx, -6 + back, -5, 19, 10, 3);
+      ctx.fillStyle = '#1c1c1c';
       ctx.fill();
       ctx.stroke();
       ctx.beginPath();
-      ctx.ellipse(6 + back, 0, 3, 7, 0, 0, TAU);
-      ctx.fillStyle = '#bdbdbd';
+      roundRectPath(ctx, 11 + back, -7, 6, 14, 2);
       ctx.fill();
       ctx.stroke();
+      // A glint along the barrel so it reads as round.
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      ctx.lineWidth = 1.4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-1 + back, -2.5);
+      ctx.lineTo(9 + back, -2.5);
+      ctx.stroke();
+      // Muzzle flash right after a shot.
+      if (recoil[i] > 0.5) {
+        const k = (recoil[i] - 0.5) / 0.5;
+        ctx.globalAlpha = k;
+        ctx.beginPath();
+        for (let p = 0; p < 10; p++) {
+          const a = (p / 10) * TAU;
+          const r = (p % 2 === 0 ? 8 : 3.5) * (0.8 + 0.4 * k);
+          const px = 21 + back + Math.cos(a) * r;
+          const py = Math.sin(a) * r;
+          if (p === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = lw * 0.5;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       ctx.restore();
     });
   }
@@ -230,24 +284,36 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     ctx.stroke();
   }
 
-  function drawOverlays(fx: Fx) {
+  /** Full-screen edge glows, built once per screen size and colour; opacity is applied when drawing. */
+  const glows = new Map<string, CanvasGradient>();
+  function edgeGlow(rgb: RGB): CanvasGradient {
     const w = view.cssW;
     const h = view.cssH;
+    const key = `${w}x${h}:${rgb.join()}`;
+    let g = glows.get(key);
+    if (!g) {
+      if (glows.size > 8) glows.clear();
+      g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.hypot(w, h) / 2);
+      g.addColorStop(0, rgbToCss(rgb, 0));
+      g.addColorStop(1, rgbToCss(rgb, 1));
+      glows.set(key, g);
+    }
+    return g;
+  }
+
+  function drawOverlays(fx: Fx) {
     if (slow > 0.01) {
-      const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.hypot(w, h) / 2);
-      g.addColorStop(0, 'rgba(20,0,40,0)');
-      g.addColorStop(1, `rgba(20,0,40,${0.45 * slow})`);
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = 0.45 * slow;
+      ctx.fillStyle = edgeGlow(VIGNETTE);
+      ctx.fillRect(0, 0, view.cssW, view.cssH);
     }
     const f = fx.flash();
     if (f.alpha >= 0.01) {
-      const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.hypot(w, h) / 2);
-      g.addColorStop(0, rgbToCss(f.rgb, 0));
-      g.addColorStop(1, rgbToCss(f.rgb, f.alpha));
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = f.alpha;
+      ctx.fillStyle = edgeGlow(f.rgb);
+      ctx.fillRect(0, 0, view.cssW, view.cssH);
     }
+    ctx.globalAlpha = 1;
   }
 
   return {
@@ -258,7 +324,10 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
       for (const e of events) {
         if (e.type === 'bounce') motion.bounce(e.nx, e.ny, e.speed);
         else if (e.type === 'fire') recoil[e.dir > 0 ? 0 : 1] = 1;
-        else if (e.type === 'death') playerTrail.clear();
+        else if (e.type === 'death') {
+          playerTrail.clear();
+          caught = { x: e.x, y: e.y, at: clock };
+        }
       }
     },
     draw(world, fx, alpha, joystick, rawDt) {

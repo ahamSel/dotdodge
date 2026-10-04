@@ -1,39 +1,43 @@
 import { describe, expect, it } from 'vitest';
 import { HH, HW } from '../src/game/arena';
-import { fitView, HUD_MARGIN, hudBand, screenDirToWorld, toScreen, worldMatrix, type View } from '../src/render/view';
+import { fitView, frameWidth, screenDirToWorld, toScreen, worldMatrix, type View } from '../src/render/view';
 
-function fitsInside(v: View) {
-  expect(v.x).toBeGreaterThanOrEqual(HUD_MARGIN - 1e-9);
-  expect(v.x + v.w).toBeLessThanOrEqual(v.cssW - HUD_MARGIN + 1e-9);
-  expect(v.y).toBeGreaterThanOrEqual(hudBand(v.cssH) - 1e-9); // the HUD band stays clear of the arena
-  expect(v.y + v.h).toBeLessThanOrEqual(v.cssH - HUD_MARGIN + 1e-9);
+/** The red frame around the arena: every side at least the frame width, and as even as the fixed arena shape allows. */
+function evenFrame(v: View, tolerance: number) {
+  const f = frameWidth(v.cssW, v.cssH);
+  const sides = [v.x, v.cssW - (v.x + v.w), v.y, v.cssH - (v.y + v.h)];
+  for (const s of sides) expect(s).toBeGreaterThanOrEqual(f - 1e-9);
+  expect(Math.max(...sides) - Math.min(...sides)).toBeLessThanOrEqual(tolerance);
+  expect(sides[0]).toBeCloseTo(sides[1], 6); // centred left/right
+  expect(sides[2]).toBeCloseTo(sides[3], 6); // centred top/bottom
 }
 
 describe('fitView', () => {
-  it('fits the 1.95:1 arena under the HUD band of the itch embed', () => {
+  it('frames the 1.95:1 arena evenly in the itch embed', () => {
     const v = fitView(1024, 576);
     expect(v.portrait).toBe(false);
     expect(v.w / v.h).toBeCloseTo((2 * HW) / (2 * HH), 6);
-    expect(v.w).toBeGreaterThan(950);
-    fitsInside(v);
+    expect(v.w).toBeGreaterThan(900);
+    evenFrame(v, 6);
   });
 
-  it('fits a landscape phone', () => {
+  it('frames a landscape phone with the frame at least as thick on every side', () => {
     const v = fitView(844, 390);
     expect(v.portrait).toBe(false);
-    fitsInside(v);
+    evenFrame(v, 140); // a 2.16:1 screen around a 1.95:1 arena: the extra width goes to the sides, never the top
   });
 
   it('turns the arena a quarter turn on a portrait phone', () => {
     const v = fitView(390, 844);
     expect(v.portrait).toBe(true);
     expect(v.h / v.w).toBeCloseTo((2 * HW) / (2 * HH), 6);
-    fitsInside(v);
+    evenFrame(v, 80); // a tall phone leaves extra above and below the turned arena
   });
 
-  it('keeps the band between 44 and 64 px', () => {
-    expect(hudBand(300)).toBe(44);
-    expect(hudBand(1400)).toBe(64);
+  it('keeps the frame between 40 and 52 px (room for a thumb-sized pause button in the top strip)', () => {
+    expect(frameWidth(390, 300)).toBe(40);
+    expect(frameWidth(1024, 576)).toBeGreaterThanOrEqual(44);
+    expect(frameWidth(3000, 2000)).toBe(52);
   });
 });
 

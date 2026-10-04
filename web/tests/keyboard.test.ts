@@ -36,6 +36,14 @@ describe('keyboard', () => {
     expect(kb.dir()).toEqual({ x: 0, y: 0 });
   });
 
+  it('can be cleared by hand (a tab hidden without the window losing focus)', () => {
+    const t = new EventTarget();
+    const kb = createKeyboard(t);
+    key(t, 'keydown', 'KeyD');
+    kb.clear();
+    expect(kb.dir()).toEqual({ x: 0, y: 0 });
+  });
+
   it('stops movement keys from scrolling the page unless told not to', () => {
     const t = new EventTarget();
     let capture = true;

@@ -17,25 +17,26 @@ export interface View {
   cy: number;
 }
 
-export const HUD_MARGIN = 12;
-
-/** Height of the HUD strip above the arena. */
-export function hudBand(cssH: number): number {
-  return Math.min(64, Math.max(44, cssH * 0.09));
+/**
+ * Thickness of the red frame around the arena, the same on every side. The HUD lives in the top strip,
+ * so it never drops below 40 px; it grows with the screen up to 52 px.
+ */
+export function frameWidth(cssW: number, cssH: number): number {
+  return Math.min(52, Math.max(40, Math.round(Math.min(cssW, cssH) * 0.08)));
 }
 
 export function fitView(cssW: number, cssH: number): View {
   const portrait = cssH > cssW;
-  const band = hudBand(cssH);
+  const f = frameWidth(cssW, cssH);
   const worldW = portrait ? 2 * HH : 2 * HW;
   const worldH = portrait ? 2 * HW : 2 * HH;
-  const availW = Math.max(1, cssW - 2 * HUD_MARGIN);
-  const availH = Math.max(1, cssH - band - HUD_MARGIN);
+  const availW = Math.max(1, cssW - 2 * f);
+  const availH = Math.max(1, cssH - 2 * f);
   const scale = Math.min(availW / worldW, availH / worldH);
   const w = worldW * scale;
   const h = worldH * scale;
   const x = (cssW - w) / 2;
-  const y = band + (availH - h) / 2;
+  const y = (cssH - h) / 2;
   return { cssW, cssH, portrait, scale, x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
 }
 

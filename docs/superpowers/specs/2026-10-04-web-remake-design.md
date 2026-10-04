@@ -128,7 +128,7 @@ Seven missiles, all capsules 16 long with radius 3.5:
   - UI text white with a black outline
 - **Layout:**
   - The canvas fills the viewport in frame red.
-  - A HUD band of `clamp(44px, 9vh, 64px)` is reserved at the top. The arena fits the remaining area with a 12 px margin, keeping aspect 1.95 (portrait: 1/1.95), centred.
+  - The red frame is the same thickness on all four sides: `clamp(40px, 8% of the shorter screen side, 52px)`. The arena fits inside it, keeping aspect 1.95 (portrait: 1/1.95), centred. The HUD lives in the top frame strip.
   - The arena has rounded corners (radius ≈ 12 units) and a thick black outline.
   - The arena rectangle in CSS pixels is published as CSS variables (`--ax`, `--ay`, `--aw`, `--ah`), so the HUD and buttons are positioned from it and never sit on the walls.
 - **Outline:** one width for everything, 2.4 world units, with a minimum of 2 CSS px.
@@ -138,9 +138,9 @@ Seven missiles, all capsules 16 long with radius 3.5:
   - A short tapering trail behind it.
 - **Missiles:** a capsule in its colour with an outline, rotated to its heading, with a short tapering colour trail (about 0.25 s) and three cartoon speed lines behind it (like the cover art).
 - **Warning:** a black chevron with a white outline, drawn on the wall and blinking. Launching flashes the wall at the entry point.
-- **Cannons:** a small barrel in their corner that recoils on each shot. **Arrows:** white triangles with outlines.
+- **Cannons:** a stubby black barrel with a thick muzzle ring on a round mount in the corner wall; it recoils and shows a white muzzle flash on each shot. **Arrows:** white triangles with outlines.
 - **Title logo:** the "sun" from the original start art, redrawn: the dot in the centre with 7 coloured capsules radiating outward with speed lines, slowly breathing. "DotDodge" set in Tektur 900 at 75% width, white with a black outline.
-- **Font:** Tektur (variable, weight 900, width 75%), woff2 in `web/public/fonts/` with `OFL.txt`.
+- **Font:** Tektur (variable, weight 900, width 75%), a subset woff2 bundled by Vite from `web/src/ui/fonts/`, with its licence shipped at the zip root as `OFL-Tektur.txt`.
 
 ## Feel (juice)
 
@@ -150,7 +150,7 @@ Seven missiles, all capsules 16 long with radius 3.5:
 - **Stage up:** a "STAGE N" banner swoops across the arena, the timer pops, the frame pulses.
 - **Last 10 s:** the timer turns red and pulses with a tick each second.
 - **Slow-mo:** the field desaturates and darkens slightly with a vignette, there's a low "whomp" in and a rising "whomp" out, and trails lengthen. The meter shows in the HUD.
-- **Death:** 80 ms hit-stop, the player flashes white, then bursts into outlined shards. Big shake (trauma 1), a red flash, and "GOTCHA!" slams in.
+- **Death:** 80 ms hit-stop while the dot flips to black and swells, then it bursts into outlined shards. Big shake (trauma 1), a red flash, and "GOTCHA!" slams in.
 - **Win:** missiles pop one by one into confetti in their colours. A fanfare plays, then an iris wipe into Congrats.
 - **Screen transitions:** an iris wipe for title → play, restart and win → Congrats. DOM screens crossfade.
 - **Buttons:** cartoon style with a white fill, black outline and offset black shadow. Hover lifts, press sinks into the shadow.
@@ -187,7 +187,7 @@ web/
   index.html            canvas + UI overlay root
   vite.config.ts        base './', vitest config
   package.json          dev, build, test, typecheck, itch
-  public/fonts/         Tektur.woff2, OFL.txt
+  public/OFL-Tektur.txt font licence (src/ui/fonts/tektur.woff2 is bundled by Vite)
   scripts/zip-itch.mjs  zips dist/ into dotdodge.zip (system `zip`)
   tools/                shots.html, shots.ts, vite.config.ts: store art from the real sim + renderer
   marketing/            cover.png (1260×1000) and screenshots

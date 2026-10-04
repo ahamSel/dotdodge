@@ -16,6 +16,8 @@ export interface Music {
   setSlow(on: boolean): void;
   /** Paused: quieter. */
   setDucked(on: boolean): void;
+  /** Tab hidden: silent until it comes back. */
+  setHidden(on: boolean): void;
 }
 
 export function layersFor(stage: number): Layers {
@@ -51,6 +53,13 @@ export function createMusic(engine: AudioEngine): Music {
   let filter: BiquadFilterNode | null = null;
   let duck: GainNode | null = null;
   let noiseBuf: AudioBuffer | null = null;
+  let ducked = false;
+  let hidden = false;
+
+  function applyDuck() {
+    const ctx = engine.ctx();
+    if (ctx && duck) duck.gain.setTargetAtTime(hidden ? 0 : ducked ? 0.35 : 1, ctx.currentTime, 0.1);
+  }
 
   function nodes(ctx: AudioContext): AudioNode | null {
     const bus = engine.musicBus();
@@ -162,8 +171,12 @@ export function createMusic(engine: AudioEngine): Music {
       if (ctx && filter) filter.frequency.setTargetAtTime(on ? 700 : 18000, ctx.currentTime, 0.08);
     },
     setDucked(on) {
-      const ctx = engine.ctx();
-      if (ctx && duck) duck.gain.setTargetAtTime(on ? 0.35 : 1, ctx.currentTime, 0.1);
+      ducked = on;
+      applyDuck();
+    },
+    setHidden(on) {
+      hidden = on;
+      applyDuck();
     },
   };
 }

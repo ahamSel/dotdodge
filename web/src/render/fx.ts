@@ -62,6 +62,8 @@ const RED = '#ff2a2a';
 /** Peak shake in world units at full trauma; offset = trauma² × this. */
 const SHAKE_UNITS = 9;
 const POP_GAP = 0.12;
+/** How long the dot flashes before it shatters; matches main.ts's hit-stop. */
+export const DEATH_FLASH = 0.08;
 
 type Range = readonly [number, number];
 const pickIn = ([lo, hi]: Range) => lo + Math.random() * (hi - lo);
@@ -154,13 +156,21 @@ export function createFx(reducedMotion: boolean): Fx {
           case 'slowmo':
             ring(world.player.x, world.player.y, 10, 90, 0.4, e.on ? INK : WHITE, 3);
             break;
-          case 'death':
+          case 'death': {
             shake(1);
             flashWith(RED, 0.5);
-            ring(e.x, e.y, 10, 80, 0.5, INK, 4);
-            burst(e.x, e.y, 14, WHITE, 'shard', [120, 320], [0.6, 1.1], [5, 9], 0, 2.5);
             burst(e.hx, e.hy, 8, WHITE, 'dot', [80, 200], [0.2, 0.4], [2, 3.5]);
+            // The dot flashes during the hit-stop (renderer), then shatters.
+            const { x, y } = e;
+            pending.push({
+              at: clock + DEATH_FLASH,
+              run: () => {
+                ring(x, y, 10, 80, 0.5, INK, 4);
+                burst(x, y, 14, WHITE, 'shard', [120, 320], [0.6, 1.1], [5, 9], 0, 2.5);
+              },
+            });
             break;
+          }
           case 'win': {
             flashWith(WHITE, 0.3);
             let i = 0;
@@ -196,20 +206,26 @@ export function createFx(reducedMotion: boolean): Fx {
         pending = pending.filter((p) => p.at > clock);
         for (const p of due) p.run();
       }
+      // Age everything and compact in place: no new arrays every frame.
+      let n = 0;
       for (const p of particles) {
         p.life -= dt;
+        if (p.life <= 0) continue;
         const drag = Math.exp(-p.drag * dt);
         p.vx *= drag;
         p.vy = p.vy * drag + p.gravity * dt;
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         p.rot += p.spin * dt;
+        particles[n++] = p;
       }
-      particles = particles.filter((p) => p.life > 0);
-      for (const r of rings) r.life -= dt;
-      rings = rings.filter((r) => r.life > 0);
-      for (const s of streaks) s.life -= dt;
-      streaks = streaks.filter((s) => s.life > 0);
+      particles.length = n;
+      n = 0;
+      for (const r of rings) if ((r.life -= dt) > 0) rings[n++] = r;
+      rings.length = n;
+      n = 0;
+      for (const s of streaks) if ((s.life -= dt) > 0) streaks[n++] = s;
+      streaks.length = n;
       trauma = Math.max(0, trauma - 1.8 * dt);
       flashAlpha *= Math.exp(-5 * dt);
       pulse *= Math.exp(-4 * dt);

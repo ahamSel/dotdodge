@@ -43,16 +43,20 @@ export function createTrail(): Trail {
       while (samples.length > 2 && samples[0].t < now - KEEP) samples.shift();
     },
     draw(ctx, now, maxAge, width, color) {
-      const segs = trailSegments(samples, now, maxAge);
-      if (segs.length === 0) return;
+      // Same segments as trailSegments(), walked in place so drawing allocates nothing.
+      const from = now - maxAge;
       ctx.strokeStyle = color;
       ctx.lineCap = 'round';
-      for (const s of segs) {
-        ctx.globalAlpha = s.k * 0.85;
-        ctx.lineWidth = Math.max(0.01, width * s.k);
+      for (let i = 1; i < samples.length; i++) {
+        const a = samples[i - 1];
+        if (a.t < from) continue;
+        const b = samples[i];
+        const k = Math.max(0, Math.min(1, (b.t - from) / maxAge));
+        ctx.globalAlpha = k * 0.85;
+        ctx.lineWidth = Math.max(0.01, width * k);
         ctx.beginPath();
-        ctx.moveTo(s.x0, s.y0);
-        ctx.lineTo(s.x1, s.y1);
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
         ctx.stroke();
       }
       ctx.globalAlpha = 1;

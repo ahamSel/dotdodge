@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionAllowed, shortcutFor, type KeyInfo } from '../src/input/shortcuts';
+import { actionAllowed, canPause, shortcutFor, type KeyInfo } from '../src/input/shortcuts';
 
 const key = (code: string, extra: Partial<KeyInfo> = {}): KeyInfo => ({
   code,
@@ -57,5 +57,15 @@ describe('actionAllowed', () => {
     expect(actionAllowed('pause', 'congrats')).toBe(false);
     expect(actionAllowed('resume', 'paused')).toBe(true);
     expect(actionAllowed('restart', 'gameover')).toBe(true);
+  });
+});
+
+describe('canPause', () => {
+  it('pauses a live run but not the beat between a death and the GOTCHA screen', () => {
+    expect(canPause('playing', 'running')).toBe(true);
+    expect(canPause('playing', 'intro')).toBe(true);
+    expect(canPause('playing', 'dead')).toBe(false);
+    expect(canPause('playing', 'won')).toBe(false);
+    expect(canPause('gameover', 'dead')).toBe(false);
   });
 });

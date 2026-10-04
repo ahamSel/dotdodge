@@ -8,18 +8,18 @@ import { CONFIG } from './game/config';
 import { createWorld, drainEvents, step } from './game/sim';
 import type { SimEvent, StepInput, Vec, World } from './game/types';
 import { createKeyboard } from './input/keyboard';
-import { actionAllowed, shortcutFor } from './input/shortcuts';
+import { actionAllowed, canPause, shortcutFor } from './input/shortcuts';
 import { createJoystick } from './input/touch';
 import { planSteps } from './loop';
-import { createFx } from './render/fx';
+import { createFx, DEATH_FLASH } from './render/fx';
 import { createRenderer } from './render/renderer';
 import { screenDirToWorld } from './render/view';
 import { readBool, readNumber, writeBool, writeNumber } from './storage';
 import { createUI, type ScreenName, type UIAction } from './ui/screens';
 
 const ZERO: Vec = { x: 0, y: 0 };
-/** A catch freezes the world for a moment so it lands with weight. */
-const HIT_STOP = 0.08;
+/** A catch freezes the world for a moment so it lands with weight (the dot flashes meanwhile). */
+const HIT_STOP = DEATH_FLASH;
 /** Seconds of confetti before the iris closes into Congrats. */
 const WIN_TO_CONGRATS = 1.6;
 
@@ -106,7 +106,7 @@ function toMenu() {
 }
 
 function pause() {
-  if (screen === 'playing') setScreen('paused');
+  if (canPause(screen, world?.phase ?? null)) setScreen('paused');
 }
 
 function resume() {
@@ -240,6 +240,9 @@ function frame(now: number) {
       if (congratsIn <= 0) ui.iris(() => setScreen('congrats'));
     }
   }
+  // Re-fit when the canvas size changed without a resize event (iOS rotation, itch fullscreen).
+  const v = renderer.view();
+  if (canvas.clientWidth !== v.cssW || canvas.clientHeight !== v.cssH) ui.layout(renderer.resize());
   const animate = running || screen === 'title';
   if (animate) fx.update(frameDt);
   if (world) ui.hud(world, touchUsed);
@@ -298,7 +301,11 @@ window.addEventListener('resize', () => ui.layout(renderer.resize()));
 window.addEventListener('blur', pause);
 window.addEventListener('pagehide', recordRun);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) pause();
+  if (document.hidden) {
+    keyboard.clear(); // some browsers hide a tab without blurring the window
+    pause();
+  }
+  music.setHidden(document.hidden);
 });
 
 audio.setVolumes(musicVol, sfxVol);

@@ -10,6 +10,8 @@ const MOVE = new Set([...LEFT, ...RIGHT, ...UP, ...DOWN]);
 export interface Keyboard {
   /** Screen direction (x right, y up), unit length or zero. */
   dir(): Vec;
+  /** Releases every held key (for a hidden tab that never sent blur). */
+  clear(): void;
   dispose(): void;
 }
 
@@ -39,6 +41,7 @@ export function createKeyboard(target: EventTarget, capture: () => boolean = () 
       const m = Math.hypot(x, y);
       return m > 0 ? { x: x / m, y: y / m } : { x: 0, y: 0 };
     },
+    clear: onBlur,
     dispose() {
       target.removeEventListener('keydown', onDown);
       target.removeEventListener('keyup', onUp);

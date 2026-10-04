@@ -136,24 +136,34 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
 .hud .stage,
 .hud .timer,
 .hud .slowmo { position: absolute; top: 0; height: var(--ay); display: flex; align-items: center; text-shadow: var(--ol); }
-.hud .stage { left: var(--ax); font-size: clamp(16px, 2.4vw, 24px); }
+.hud .stage { left: var(--ax); font-size: min(clamp(16px, 2.4vw, 24px), calc(var(--ay) * 0.5)); }
 .hud .timer {
   left: 50%;
   transform: translateX(-50%);
-  font-size: clamp(28px, 5vw, 46px);
+  font-size: min(clamp(28px, 5vw, 46px), calc(var(--ay) * 0.78));
+  line-height: 1;
   font-variant-numeric: tabular-nums;
   transition: color 0.2s ease;
 }
 /* The band is red, so "urgent" uses the yellow missile's colour rather than red. */
 .hud .timer.urgent { color: #ffd900; }
-.icon-btn { width: 44px; height: 44px; padding: 0; border-radius: 12px; display: grid; place-items: center; box-shadow: 0 4px 0 var(--ink); }
-.pause-btn { position: absolute; top: calc((var(--ay) - 48px) / 2); left: calc(var(--ax) + var(--aw) - 44px); }
+.btn.icon-btn { width: 44px; height: 44px; padding: 0; border-radius: 12px; display: grid; place-items: center; box-shadow: 0 4px 0 var(--ink); }
+/* Sized to the top frame strip (40-52 px tall), so it never pokes out of it. */
+.btn.pause-btn {
+  --s: min(44px, calc(var(--ay) - 6px));
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  top: calc((var(--ay) - var(--s)) / 2 - 1px);
+  left: calc(var(--ax) + var(--aw) - var(--s));
+  box-shadow: 0 3px 0 var(--ink);
+}
 .pause-btn::before,
-.pause-btn::after { content: ''; grid-area: 1 / 1; width: 6px; height: 18px; border-radius: 2px; background: var(--ink); }
-.pause-btn::before { transform: translateX(-5px); }
-.pause-btn::after { transform: translateX(5px); }
+.pause-btn::after { content: ''; grid-area: 1 / 1; width: 5px; height: calc(var(--s) * 0.42); border-radius: 2px; background: var(--ink); }
+.pause-btn::before { transform: translateX(-4px); }
+.pause-btn::after { transform: translateX(4px); }
 .hud .slowmo {
-  left: calc(var(--ax) + var(--aw) - 60px);
+  left: calc(var(--ax) + var(--aw) - min(44px, calc(var(--ay) - 6px)) - 14px);
   transform: translateX(-100%);
   gap: 10px;
   font-size: 15px;

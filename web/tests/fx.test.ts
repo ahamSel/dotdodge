@@ -88,3 +88,15 @@ describe('frame pulse', () => {
     expect(fx.pulse()).toBeLessThan(0.05);
   });
 });
+
+describe('death sequence', () => {
+  it('holds the shards back for the hit-stop flash, then bursts', () => {
+    const fx = createFx(false);
+    fx.handle([death], createWorld());
+    const atImpact = fx.stats().particles; // just the small impact sparks
+    fx.update(0.05);
+    expect(fx.stats().particles).toBeLessThanOrEqual(atImpact);
+    fx.update(0.05); // past the 80 ms flash
+    expect(fx.stats().particles).toBeGreaterThan(atImpact);
+  });
+});

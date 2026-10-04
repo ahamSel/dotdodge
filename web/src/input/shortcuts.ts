@@ -1,3 +1,4 @@
+import type { Phase } from '../game/types';
 import type { ScreenName, UIAction } from '../ui/screens';
 
 export type Shortcut = 'pause' | 'resume' | 'back' | 'restart' | 'start' | 'mute' | 'slowmo';
@@ -49,4 +50,9 @@ export function shortcutFor(k: KeyInfo, screen: ScreenName): { action: Shortcut 
 /** The HUD's own buttons (pause, slow-mo) stay in the page under the pause and end screens; they only act while playing. */
 export function actionAllowed(action: UIAction, screen: ScreenName): boolean {
   return action === 'pause' || action === 'slowmo' ? screen === 'playing' : true;
+}
+
+/** Pausing only makes sense mid-run: not in the beat between a death and the GOTCHA screen, nor after a win. */
+export function canPause(screen: ScreenName, phase: Phase | null): boolean {
+  return screen === 'playing' && (phase === 'intro' || phase === 'running');
 }
