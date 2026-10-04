@@ -3,14 +3,87 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>DotDodge (harness)</title>
-    <style>
-      html, body { margin: 0; height: 100%; overflow: hidden; background: #ff0000; }
-      #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-    </style>
+    <meta name="theme-color" content="#ff0000" />
+    <meta name="description" content="Dodge seven homing missiles for 120 seconds. Momentum, wall bounces, and one hidden key." />
+    <title>DotDodge</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23ffad00'/%3E%3Ccircle cx='8' cy='8' r='4' fill='%23fff' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E"
+    />
   </head>
   <body>
-    <canvas id="game"></canvas>
+    <canvas id="game" aria-label="Game"></canvas>
+    <div id="ui">
+      <section class="screen" data-screen="title">
+        <div class="logo" data-bind="logo"></div>
+        <h1 class="title">DotDodge</h1>
+        <div class="menu">
+          <button class="btn primary" data-action="play">Play</button>
+          <button class="btn" data-action="options">Options</button>
+        </div>
+        <p class="best" data-bind="titleBest"></p>
+        <ul class="hints">
+          <li>WASD / arrows / drag to dodge</li>
+          <li>You win when the timer hits 0 <small>(but not impossible)</small></li>
+          <li>The last bit is tricky… and there's one hidden key</li>
+        </ul>
+      </section>
+
+      <section class="hud" data-screen="playing paused gameover congrats">
+        <div class="stage" data-bind="stage">Stage 1</div>
+        <div class="timer" data-bind="timer">120</div>
+        <div class="slowmo" data-bind="slowmo">
+          <span class="label">'X' for SlowMo</span>
+          <span class="meter"><span data-bind="slowmoFill"></span></span>
+        </div>
+        <button class="btn icon-btn pause-btn" data-action="pause" aria-label="Pause"></button>
+        <button class="btn slowmo-btn" data-action="slowmo" data-bind="slowmoBtn" aria-label="Slow motion">SLOW</button>
+        <div class="banner" data-bind="banner"></div>
+      </section>
+
+      <section class="screen overlay" data-screen="paused">
+        <h2>Paused</h2>
+        <div class="menu">
+          <button class="btn primary" data-action="resume">Resume</button>
+          <button class="btn" data-action="restart">Restart</button>
+          <button class="btn" data-action="options">Options</button>
+          <button class="btn" data-action="menu">Quit</button>
+        </div>
+      </section>
+
+      <section class="screen overlay" data-screen="options">
+        <h2>Options</h2>
+        <div class="options-list">
+          <label class="slider">Music <input type="range" min="0" max="100" step="1" data-volume="music" /></label>
+          <label class="slider">Sounds <input type="range" min="0" max="100" step="1" data-volume="sfx" /></label>
+        </div>
+        <div class="menu">
+          <button class="btn" data-action="toggleMute" aria-pressed="false">Sound: on</button>
+          <button class="btn primary" data-action="back">Back</button>
+        </div>
+      </section>
+
+      <section class="screen overlay" data-screen="gameover">
+        <h2 class="gotcha">GOTCHA!</h2>
+        <p class="run" data-bind="goRun"></p>
+        <p class="best"><span data-bind="goBest"></span><b class="new-best" data-bind="goNew">New best!</b></p>
+        <div class="menu">
+          <button class="btn primary" data-action="restart">Retry</button>
+          <button class="btn" data-action="menu">Menu</button>
+        </div>
+      </section>
+
+      <section class="screen overlay congrats" data-screen="congrats">
+        <h2>Congrats!<small>You're a Legend</small></h2>
+        <p class="credit">By ahamsel</p>
+        <div class="menu">
+          <button class="btn primary" data-action="restart">Play again</button>
+          <button class="btn" data-action="menu">Menu</button>
+        </div>
+      </section>
+
+      <div class="iris" data-bind="iris"></div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
