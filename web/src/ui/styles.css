@@ -77,7 +77,8 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
 .logo .cap, .logo .dot { stroke: var(--ink); stroke-width: 4; }
 .logo line { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
 .logo .spin { animation: spin 40s linear infinite; }
-.logo .ray { animation: ray 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * -0.26s); }
+/* Each missile rushes in at the dot, vanishes on reaching it, and the next wave follows. */
+.logo .ray { animation: ray 1.6s cubic-bezier(0.4, 0, 0.9, 0.6) infinite; animation-delay: calc(var(--i) * -0.23s); }
 .title {
   font-size: clamp(56px, 12vw, 120px);
   line-height: 0.9;
@@ -274,7 +275,12 @@ input[type='range']:focus-visible { outline: 3px solid var(--white); outline-off
 
 @keyframes drop { from { opacity: 0; transform: translateY(-40px) scale(0.9); } to { opacity: 1; transform: none; } }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes ray { 50% { transform: translateX(7px); } }
+@keyframes ray {
+  0% { transform: translateX(18px); opacity: 0; }
+  18% { opacity: 1; }
+  82% { transform: translateX(-4px); opacity: 1; }
+  100% { transform: translateX(-9px); opacity: 0; }
+}
 @keyframes slam { from { opacity: 0; transform: rotate(-4deg) scale(2.2); } to { opacity: 1; transform: rotate(-4deg) scale(1); } }
 @keyframes pulse { to { transform: scale(1.08); } }
 @keyframes banner {

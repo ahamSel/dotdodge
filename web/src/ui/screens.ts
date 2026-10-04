@@ -28,15 +28,15 @@ export interface UI {
 
 const POP: Keyframe[] = [{ transform: 'translateX(-50%) scale(1.3)' }, { transform: 'translateX(-50%) scale(1)' }];
 
-/** The 2020 start-screen "sun": the dot with the seven missiles flying outward. */
+/** The 2020 start-screen "sun": the seven missiles closing in on the dot, speed lines trailing behind them. */
 function logoSvg(): string {
   const rays = CONFIG.missiles
     .map((m, i) => {
       const a = (-90 + (i * 360) / CONFIG.missiles.length).toFixed(1);
       return (
         `<g transform="rotate(${a})"><g class="ray" style="--i:${i}">` +
-        `<line x1="24" y1="-4" x2="31" y2="-4"/><line x1="20" y1="0" x2="31" y2="0"/><line x1="25" y1="4" x2="31" y2="4"/>` +
-        `<rect class="cap" x="36" y="-6" width="28" height="12" rx="6" fill="${m.color}"/></g></g>`
+        `<rect class="cap" x="28" y="-6" width="28" height="12" rx="6" fill="${m.color}"/>` +
+        `<line x1="61" y1="-4" x2="68" y2="-4"/><line x1="60" y1="0" x2="72" y2="0"/><line x1="62" y1="4" x2="69" y2="4"/></g></g>`
       );
     })
     .join('');
