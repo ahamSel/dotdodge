@@ -93,9 +93,46 @@ async function cover() {
   await save(out, 'cover.png');
 }
 
+/**
+ * The itch page banner: a strip across the top of a stage-6 arena (spike lane, cannon, missiles), rendered by the
+ * game at ~1.5 px per world unit and cropped, with the title over it. 960 CSS px wide, the itch page width.
+ */
+async function banner() {
+  const W = 960;
+  const H = 250;
+  const s = stage(W, 560);
+  const w = s.world;
+  w.elapsed = 104;
+  w.time = 2.75 + 104;
+  w.stage = 6;
+  w.cannonClock = 0.3;
+  for (let x = -319; x < 318; x += 21) w.arrows.push({ x, y: 156, px: x, dir: 1, tip: -1 });
+  for (let x = 309; x > -318; x -= 21) w.arrows.push({ x, y: -156, px: x, dir: -1, tip: 1 });
+  const p = w.player;
+  p.x = p.px = 215;
+  p.y = p.py = 70;
+  fly(w, 0, -290, 60, 0.15);
+  fly(w, 1, -170, 105, -0.25);
+  fly(w, 2, 70, 125, -0.5);
+  fly(w, 5, -250, 30, 0.1);
+  fly(w, 6, 40, 20, 0.25);
+  settle(s, 0.12);
+  const out = document.createElement('canvas');
+  out.width = W * DPR;
+  out.height = H * DPR;
+  out.style.width = `${W}px`;
+  out.style.height = `${H}px`;
+  const top = 28; // trim most of the red HUD band above the arena
+  out.getContext('2d')!.drawImage(s.canvas, 0, top * DPR, W * DPR, H * DPR, 0, 0, W * DPR, H * DPR);
+  document.body.append(out);
+  outlinedText(out, 'DotDodge', W * 0.34, 118, 104);
+  await save(out, 'banner.png');
+}
+
 async function main() {
   await document.fonts.load('condensed 900 104px Tektur');
-  await cover();
+  if (!location.search.includes('only=banner')) await cover();
+  await banner();
   log('done');
 }
 void main();
