@@ -117,6 +117,7 @@ export function createUI(root: HTMLElement): UI {
 
   return {
     show(name) {
+      root.dataset.current = name;
       for (const el of screens) el.classList.toggle('is-visible', el.dataset.screen!.split(' ').includes(name));
     },
 

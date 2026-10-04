@@ -1,4 +1,4 @@
-import type { ScreenName } from '../ui/screens';
+import type { ScreenName, UIAction } from '../ui/screens';
 
 export type Shortcut = 'pause' | 'resume' | 'back' | 'restart' | 'start' | 'mute' | 'slowmo';
 
@@ -44,4 +44,9 @@ export function shortcutFor(k: KeyInfo, screen: ScreenName): { action: Shortcut 
       return screen === 'playing' ? { action: 'slowmo', preventDefault: false } : none;
   }
   return none;
+}
+
+/** The HUD's own buttons (pause, slow-mo) stay in the page under the pause and end screens; they only act while playing. */
+export function actionAllowed(action: UIAction, screen: ScreenName): boolean {
+  return action === 'pause' || action === 'slowmo' ? screen === 'playing' : true;
 }

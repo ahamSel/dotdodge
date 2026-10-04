@@ -8,7 +8,7 @@ import { CONFIG } from './game/config';
 import { createWorld, drainEvents, step } from './game/sim';
 import type { SimEvent, StepInput, Vec, World } from './game/types';
 import { createKeyboard } from './input/keyboard';
-import { shortcutFor } from './input/shortcuts';
+import { actionAllowed, shortcutFor } from './input/shortcuts';
 import { createJoystick } from './input/touch';
 import { planSteps } from './loop';
 import { createFx } from './render/fx';
@@ -137,6 +137,7 @@ function toggleMute() {
 
 function act(action: UIAction) {
   audio.unlock();
+  if (!actionAllowed(action, screen)) return;
   if (action !== 'slowmo') sfx.play('click');
   switch (action) {
     case 'play':

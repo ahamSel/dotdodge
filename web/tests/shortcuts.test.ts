@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shortcutFor, type KeyInfo } from '../src/input/shortcuts';
+import { actionAllowed, shortcutFor, type KeyInfo } from '../src/input/shortcuts';
 
 const key = (code: string, extra: Partial<KeyInfo> = {}): KeyInfo => ({
   code,
@@ -46,5 +46,16 @@ describe('shortcutFor', () => {
 
   it('leaves Enter and Space to a focused button', () => {
     expect(shortcutFor(key('Enter', { onButton: true }), 'title')).toEqual({ action: null, preventDefault: false });
+  });
+});
+
+describe('actionAllowed', () => {
+  it('only lets the in-game HUD buttons act while playing (they sit under the pause and end screens)', () => {
+    expect(actionAllowed('slowmo', 'playing')).toBe(true);
+    expect(actionAllowed('slowmo', 'paused')).toBe(false);
+    expect(actionAllowed('pause', 'gameover')).toBe(false);
+    expect(actionAllowed('pause', 'congrats')).toBe(false);
+    expect(actionAllowed('resume', 'paused')).toBe(true);
+    expect(actionAllowed('restart', 'gameover')).toBe(true);
   });
 });

@@ -186,6 +186,9 @@ h2 { font-size: clamp(40px, 8vw, 72px); line-height: 1; }
 .slowmo-btn.is-on { opacity: 1; transform: none; }
 .slowmo-btn:not(.is-on) { pointer-events: none !important; }
 .slowmo-btn.is-active { background: #8fd3ff; }
+/* The HUD stays up under the pause and end screens, but its buttons only belong to play. */
+#ui:not([data-current='playing']) .pause-btn,
+#ui:not([data-current='playing']) .slowmo-btn { visibility: hidden; pointer-events: none !important; }
 .banner {
   position: absolute;
   left: calc(var(--ax) + var(--aw) / 2);
