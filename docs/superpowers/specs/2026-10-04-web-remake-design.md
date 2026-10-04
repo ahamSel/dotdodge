@@ -1,7 +1,7 @@
 # DotDodge — Web Remake Design
 
 Date: 2026-10-04
-Status: Approved in chat (gameplay, look & feel, architecture), pending written-spec review
+Status: Approved (written spec reviewed 2026-10-04)
 
 ## Goal
 
@@ -168,7 +168,7 @@ Seven missiles, all capsules 16 long with radius 3.5:
   - on touch devices, a slow-mo button at the bottom right of the arena from stage 6
 - **Paused:** Resume, Restart, Options, Quit (to title).
 - **Retry (game over):** "GOTCHA!", time survived and stage reached, best plus "New best!", Retry and Menu.
-- **Congrats:** "Congrats! You're a Legend", "By AaEsS", Play again and Menu.
+- **Congrats:** "Congrats! You're a Legend", "By ahamsel", Play again and Menu.
 
 ## Sound (WebAudio, synthesised)
 
