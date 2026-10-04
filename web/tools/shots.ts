@@ -5,7 +5,6 @@ import { createWorld, drainEvents, step } from '../src/game/sim';
 import type { World } from '../src/game/types';
 import { createFx } from '../src/render/fx';
 import { createRenderer } from '../src/render/renderer';
-import { capsulePath, roundRectPath } from '../src/render/shapes';
 
 const DPR = 2;
 const log = (msg: string) => document.getElementById('log')!.insertAdjacentHTML('beforeend', `<p>${msg}</p>`);
@@ -66,14 +65,17 @@ async function save(canvas: HTMLCanvasElement, name: string) {
 }
 
 /**
- * The cover in the 2020 app icon's style: the dot in a square arena, the seven missiles closing in on it with
- * speed lines behind them. itch also shrinks the cover's centre square to make the page's tab icon, so the
- * arena is a centred square that survives that crop whole.
+ * The cover is the game's own tab icon (the SVG in index.html), drawn into a centred square on a red field.
+ * itch makes the page's tab icon by shrinking the cover's centre square, so this way it matches the game's.
  */
 async function cover() {
   const W = 630;
   const H = 500;
-  const S = 440; // arena card size
+  const html = await (await fetch('/index.html')).text();
+  const href = /rel="icon"[^>]*href="([^"]+)"/.exec(html)![1].replace(/&quot;/g, '"');
+  const icon = new Image();
+  icon.src = href;
+  await icon.decode();
   const out = document.createElement('canvas');
   out.width = W * DPR;
   out.height = H * DPR;
@@ -84,51 +86,7 @@ async function cover() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = CONFIG.colors.frame;
   ctx.fillRect(0, 0, W, H);
-  ctx.beginPath();
-  roundRectPath(ctx, (W - S) / 2, (H - S) / 2, S, S, S * 0.1);
-  ctx.fillStyle = CONFIG.colors.field;
-  ctx.fill();
-  ctx.lineWidth = S * 0.022;
-  ctx.strokeStyle = CONFIG.colors.outline;
-  ctx.stroke();
-
-  ctx.translate(W / 2, H / 2);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  // [missile, direction from the dot (degrees), distance] as laid out on the 2020 icon.
-  const ring: [number, number, number][] = [
-    [0, 180, 0.25], [6, -136, 0.24], [5, -76, 0.235], [1, -11, 0.25],
-    [3, 31, 0.24], [2, 81, 0.25], [4, 136, 0.235],
-  ];
-  const len = S * 0.15;
-  const rad = S * 0.024;
-  for (const [id, deg, dist] of ring) {
-    const a = (deg * Math.PI) / 180;
-    ctx.save();
-    ctx.rotate(a);
-    ctx.translate(dist * S, 0);
-    ctx.beginPath();
-    capsulePath(ctx, len, rad);
-    ctx.fillStyle = CONFIG.missiles[id].color;
-    ctx.fill();
-    ctx.lineWidth = S * 0.014;
-    ctx.stroke();
-    // Speed lines trail out past the missile's tail, away from the dot.
-    ctx.lineWidth = S * 0.009;
-    for (const [off, start, l] of [[-0.035, 0.03, 0.07], [0, 0.05, 0.08], [0.035, 0.035, 0.06]]) {
-      ctx.beginPath();
-      ctx.moveTo(len / 2 + start * S, off * S);
-      ctx.lineTo(len / 2 + (start + l) * S, off * S);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  ctx.beginPath();
-  ctx.arc(0, 0, S * 0.085, 0, Math.PI * 2);
-  ctx.fillStyle = CONFIG.colors.player;
-  ctx.fill();
-  ctx.lineWidth = S * 0.018;
-  ctx.stroke();
+  ctx.drawImage(icon, (W - H) / 2, 0, H, H);
   await save(out, 'cover.png');
 }
 
